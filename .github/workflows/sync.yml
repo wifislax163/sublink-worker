@@ -5,12 +5,13 @@ permissions:
 
 on:
   schedule:
-    - cron: "0 0 1,21 * *"  # 每月 1 号和 21 号的凌晨 0 点执行
+    - cron: "0 0 1,11,21 * *"  # 每月 1 号和 21 号的凌晨 0 点执行
   workflow_dispatch:
 
 jobs:
   sync_latest_from_upstream:
     runs-on: ubuntu-latest
+    # 如果你是直接新建仓库而不是 Fork，可以删掉下面这行 if 判断
     if: ${{ github.event.repository.fork }}
 
     steps:
@@ -18,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          # 必须使用具有写权限的 token，默认的 GITHUB_TOKEN 通常足够
+          # 注意：这里的 token 建议保持默认，除非你有特殊的组织权限需求
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Sync upstream changes
@@ -30,5 +31,5 @@ jobs:
           upstream_sync_branch: main
           upstream_sync_repo: 7Sageer/sublink-worker
           test_mode: false
-          # 关键：使用 merge 策略，这会保留你本地新增的文件（工作流）
-          upstream_pull_args: '--allow-unrelated-histories'
+          # 添加 -Xtheirs 确保在冲突时以作者代码为准，但保留你这个新加的 yaml 文件
+          upstream_pull_args: '--allow-unrelated-histories -Xtheirs'
